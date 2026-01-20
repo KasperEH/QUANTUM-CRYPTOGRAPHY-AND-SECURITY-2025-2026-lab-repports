@@ -118,6 +118,41 @@ def run_winnow(alice, bob, qber):
 
     return bob_corr, bits_revealed, iterations
 
+def run_winnow_iterative(alice, bob, qber):
+    # Maximum iterations to prevent infinite loops
+    MAX_ITER = 5 
+    
+    # Working copies
+    alice_curr = alice.copy()
+    bob_curr = bob.copy()
+    
+    total_revealed = 0
+    
+    # Generate a permutation index list
+    n = len(alice)
+    perm = np.arange(n)
+    
+    for i in range(MAX_ITER):
+        # 1. Run Single Pass Winnow
+        bob_curr, revealed, _ = run_winnow(alice_curr, bob_curr, qber)
+        total_revealed += revealed
+        
+        # 2. Check if we are done (optional optimization: Check Parity of whole key)
+        if np.array_equal(alice_curr, bob_curr):
+            print(f"Converged in {i+1} iterations")
+            return bob_curr, total_revealed
+            
+        # 3. SHUFFLE (Permute)
+        # Alice and Bob must permute exactly the same way
+        np.random.shuffle(perm)
+        alice_curr = alice_curr[perm]
+        bob_curr = bob_curr[perm]
+        
+    # Un-shuffle at the end if you need the original order (usually QKD just uses the final random string)
+    # If un-shuffle is needed, you need to track the inverse permutation.
+    
+    return bob_curr, total_revealed
+
 # ==============================================================================
 # 3. CASCADE PROTOCOL
 # ==============================================================================

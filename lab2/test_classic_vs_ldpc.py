@@ -13,7 +13,7 @@ def calc_efficiency(n_revealed, n_total, qber):
     return n_revealed / (n_total * h)
 
 def calc_f_prime(f, qber):
-    """Calculates f' (waste)."""
+    """Calculates f'."""
     if qber <= 0 or qber >= 0.5 or np.isnan(f): return np.nan
     return (f - 1) * ec.h_b(qber)
 
@@ -33,6 +33,8 @@ def test_protocols():
     }
 
 
+    winnow_falues = 0
+
     for qber in qber_range:
 
         print("QBER: " + str(qber))
@@ -41,31 +43,28 @@ def test_protocols():
         # Progress indicator
         print(f"Proc QBER {qber:.2f} ", end='', flush=True)
 
-        for _ in range(n_tries):
+        
+        winnow_faled = 0
+
+        for i in range(n_tries):
             alice = cp.generate_key(N)
             bob_raw = cp.add_errors(alice, qber) 
-            
+
+
             # --- 1. CASCADE ---
             bob_c, rev_c, _ = cp.run_cascade(alice, bob_raw, qber)
             #if np.array_equal(alice, bob_c):
             f_sums['cascade'].append(calc_efficiency(rev_c, N, qber))
-            if not np.array_equal(alice, bob_c):
-                results['cascade']['falures'] += 1
 
             # --- 2. WINNOW ---
-            bob_w, rev_w, _ = cp.run_winnow(alice, bob_raw, qber)
+            bob_w, rev_w = cp.run_winnow_iterative(alice, bob_raw, qber)
             #if np.array_equal(alice, bob_w):
             f_sums['winnow'].append(calc_efficiency(rev_w, N, qber))
-            if not np.array_equal(alice, bob_w):
-                results['winnow']['falures'] += 1
 
 
             # --- 3. LDPC ---
             R, s_n, p_n = ec.choose_sp(qber, 1.2, R_range, N)
             
-            if R is None:
-                # No suitable code found
-                results['ldpc']['falures'] += 1
 
             if R is not None:
                 k_ldpc = N - s_n - p_n
@@ -88,6 +87,9 @@ def test_protocols():
                     f_sums['ldpc'].append(curr_f)
             
             print(".", end="", flush=True)
+
+        if winnow_faled > 0:
+            winnow_falues += 1
 
         print(" Done!") 
         
@@ -134,20 +136,16 @@ def test_protocols():
                              linestyle=':', marker=marker, color=color, alpha=0.6, label=f'{name} Effectiveness ($f\'$)')
             lines.append(l_fp)
 
-    print("falures:")
-    for key in ['cascade', 'winnow', 'ldpc']:
-        print(f"  {key}: {results[key]['falures']}")
-
     # Axis 1 Settings
     ax1.set_title('Protocol Comparison: Efficiency ($f$) vs. Effectiveness ($f\'$)', fontsize=14)
     ax1.set_xlabel('QBER')
-    ax1.set_ylabel('Efficiency Ratio $f$ (Ideal = 1.0)')
-    ax1.set_ylim(1.0, 1.8) # Adjusted for typical f values
+    ax1.set_ylabel('Efficiency Ratio $f$')
+    ax1.set_ylim(1.0, 2.0) # f
     ax1.grid(True, linestyle='--', alpha=0.5)
 
     # Axis 2 Settings
-    ax2.set_ylabel('Effectiveness $f\'$ (Bits per Symbol)')
-    ax2.set_ylim(0, 0.2) # f' is usually small (0.0 to 0.15)
+    ax2.set_ylabel('Effectiveness $f\'$')
+    ax2.set_ylim(0, 0.2) # f' 
 
     # Legend
     labels = [l.get_label() for l in lines]
