@@ -45,7 +45,7 @@ def run_manual_test(qber, R, s_n, p_n, n_tries=N_TRIES):
     return np.mean(f_list)
 
 # =============================================================================
-# TASK 1: Fixed Rate & QBER, Varying Shortening and Puncturing
+# TASK 1: Varying Shortening and Puncturing
 # =============================================================================
 def task_1_vary_sp():
     print("\n--- Task 1: Varying Shortening and Puncturing ---")
@@ -99,8 +99,6 @@ def task_1_vary_sp():
     line2_prime, = ax3.plot(p_n_values, effec_p, 's:', markersize=4, label='Puncturing ($f\'$)', color='orange', alpha=0.8, zorder=4)
     
     ax3.set_ylabel('Effectiveness ($f\'$)', fontsize=12)
-    # Manually set limits if they still don't show:
-    # ax3.set_ylim(min(min(effec_s), min(effec_p))*0.9, max(max(effec_s), max(effec_p))*1.1)
 
     # --- TOP X-AXIS ---
     ax2.set_xlabel('Punctured Bits ($p_n$)', color='orange', fontsize=12)
@@ -118,7 +116,7 @@ def task_1_vary_sp():
     plt.savefig('task1_sp_variation_fixed.png')
 
 # =============================================================================
-# TASK 2: Fixed Code (No S/P), Varying Base Rates
+# TASK 2: Varying Base Rates
 # =============================================================================
 def task_2_vary_base_rate():
     print("\n--- Task 2: Varying Base Rate (No Shortening/Puncturing) ---")
@@ -138,7 +136,6 @@ def task_2_vary_base_rate():
     ax2 = ax1.twinx()
     color_ext = 'tab:red'
     ax2.set_ylabel('Effectiveness ($f\'$)', color=color_ext, fontsize=12)
-    # ax2.set_ylim(0, 1) # Uncomment and adjust based on your specific effectiveness range
     ax2.tick_params(axis='y', labelcolor=color_ext)
 
     for R in R_RANGE:
@@ -241,6 +238,6 @@ def task_3_llr_tracking():
 # --- Main Execution ---
 if __name__ == "__main__":
     task_1_vary_sp()
-    #task_2_vary_base_rate()
-    #task_3_llr_tracking()
+    task_2_vary_base_rate()
+    task_3_llr_tracking()
     print("\nAll simulations complete.")

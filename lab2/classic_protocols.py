@@ -65,12 +65,9 @@ def run_winnow(alice, bob, qber):
     bits_revealed = 0
     iterations = 0
     
-    # Winnow typically uses Block Size = 8 for Hamming(7,4) compatibility
-    # (1 parity bit + 7 code bits)
     block_size = 8 
     
-    # --- Pass 1: Parity Check & Hamming Correction ---
-    # Split into blocks
+
     num_blocks = n // block_size
     
     for i in range(num_blocks):
@@ -87,13 +84,7 @@ def run_winnow(alice, bob, qber):
         
         if p_a != p_b:
             iterations += 1
-            # Mismatch detected.
-            # Slide 31: "Remove one bit (to get 7), do Hamming correction"
-            # We treat the first bit as the 'removed' bit or just apply Hamming to last 7
-            
-            # Extract last 7 bits for Hamming(7,4)
-            # (In real Winnow, we might discard a bit to maintain privacy, 
-            # here we focus on correction mechanics)
+ 
             a_sub = a_block[1:] 
             b_sub = b_block[1:]
             
@@ -110,7 +101,6 @@ def run_winnow(alice, bob, qber):
                 err_idx = int(diff_val) - 1
                 b_block[1 + err_idx] = 1 - b_block[1 + err_idx] # Correct Bob
             else:
-                # If parity mismatch BUT syndrome match -> Error is in the 1st bit (the one we skipped)
                 b_block[0] = 1 - b_block[0]
 
             # Update master array
@@ -137,7 +127,7 @@ def run_winnow_iterative(alice, bob, qber):
         bob_curr, revealed, _ = run_winnow(alice_curr, bob_curr, qber)
         total_revealed += revealed
         
-        # 2. Check if we are done (optional optimization: Check Parity of whole key)
+        # 2. Check if we are done
         if np.array_equal(alice_curr, bob_curr):
             print(f"Converged in {i+1} iterations")
             return bob_curr, total_revealed
@@ -148,8 +138,6 @@ def run_winnow_iterative(alice, bob, qber):
         alice_curr = alice_curr[perm]
         bob_curr = bob_curr[perm]
         
-    # Un-shuffle at the end if you need the original order (usually QKD just uses the final random string)
-    # If un-shuffle is needed, you need to track the inverse permutation.
     
     return bob_curr, total_revealed
 
@@ -213,9 +201,6 @@ def run_cascade(alice, bob, qber):
     for pass_idx in range(4):
         iterations += 1
         
-        # In passes > 0, we permute. 
-        # For simplicity in this simulation, we just shuffle indices differently every pass
-        # unless it's pass 0.
         if pass_idx == 0:
             perm_indices = np.arange(n)
         else:

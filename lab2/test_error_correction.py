@@ -13,7 +13,6 @@ def calc_f_prime(f, qber):
     return (f - 1) * h_q
 
 # Choose of the codes pool:
-#codes = codes_from_file('codes_4000.txt'); n = 4000
 codes = codes_from_file('codes_1944.txt')
 n = 1944
 
